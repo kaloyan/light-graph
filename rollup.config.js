@@ -2,107 +2,106 @@ import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import babel from "@rollup/plugin-babel";
 import { terser } from "rollup-plugin-terser";
-import { eslint } from 'rollup-plugin-eslint';
-import serve from 'rollup-plugin-serve';
-import livereload from 'rollup-plugin-livereload';
+// import { eslint } from "rollup-plugin-eslint";
+import serve from "rollup-plugin-serve";
+import livereload from "rollup-plugin-livereload";
 
 const commonConfig = {
-    input: 'src/index.js',
-    output: {
-        name: 'light-graph',
-        sourcemap: true
-    },
-    plugins: [
-        resolve({
-            customResolveOptions: {
-                moduleDirectory: 'node_modules'
-            }
-        }),
-        babel({
-            exclude: 'node_modules/**',
-            babelHelpers: 'runtime'
-        }),
-        commonjs()
-    ]
+  input: "src/index.js",
+  output: {
+    name: "LightGraph",
+    sourcemap: true,
+  },
+  plugins: [
+    resolve({
+      customResolveOptions: {
+        moduleDirectory: "node_modules",
+      },
+    }),
+    babel({
+      exclude: "node_modules/**",
+      babelHelpers: "runtime",
+    }),
+    commonjs(),
+  ],
 };
 
 // ESM config
 const esmConfig = Object.assign({}, commonConfig);
 esmConfig.output = Object.assign({}, commonConfig.output, {
-    file: 'dist/mjs/light-graph.mjs',
-    format: 'esm'
+  file: "dist/mjs/light-graph.mjs",
+  format: "esm",
 });
 
 // ESM prod config
 const esmProdConfig = Object.assign({}, esmConfig);
 esmProdConfig.output = Object.assign({}, esmConfig.output, {
-    file: 'dist/mjs/light-graph.min.mjs',
-    sourcemap: false
+  file: "dist/mjs/light-graph.min.mjs",
+  sourcemap: false,
 });
-esmProdConfig.plugins = [
-    ...esmConfig.plugins,
-    terser()
-];
+esmProdConfig.plugins = [...esmConfig.plugins, terser()];
 
 // UMD config
 const umdConfig = Object.assign({}, commonConfig);
 umdConfig.output = Object.assign({}, commonConfig.output, {
-    file: 'dist/umd/light-graph.js',
-    format: 'umd'
+  file: "dist/umd/light-graph.js",
+  format: "umd",
 });
-umdConfig.plugins = [
-    ...commonConfig.plugins
-];
+umdConfig.plugins = [...commonConfig.plugins];
 
 // Production config
 const umdProdConfig = Object.assign({}, umdConfig);
 umdProdConfig.output = Object.assign({}, umdConfig.output, {
-    file: 'dist/umd/light-graph.min.js',
-    sourcemap: false
+  file: "dist/umd/light-graph.min.js",
+  sourcemap: false,
 });
-umdProdConfig.plugins = [
-    ...umdConfig.plugins,
-    terser()
-];
+umdProdConfig.plugins = [...umdConfig.plugins, terser()];
 
 let configurations = [];
 if (process.env.SERVE) {
-    const serveConfig = Object.assign({}, commonConfig);
-    serveConfig.input = 'render/index.js';
-    serveConfig.output = Object.assign({}, commonConfig.output, {
-        file: 'dist/render/light-graph.iife.js',
-        format: 'iife'
-    });
-    serveConfig.plugins = [
-        eslint({
-            exclude: [
-                'node_modules/**',
-                'json/**'
-            ],
-            throwOnError: true
-        }),
-        ...umdConfig.plugins
-    ];
-    serveConfig.plugins.push(
-        serve({
-            open: true,
-            contentBase: ['dist'],
-            host: 'localhost',
-            port: '3030'
-        }),
-        livereload({
-            watch: 'dist',
-            verbose: false
-        })
-    );
-    configurations.push(serveConfig);
+  const serveConfig = Object.assign({}, commonConfig);
+  //   serveConfig.input = "render/index.js";
+  serveConfig.input = "src/index.js";
+  serveConfig.output = Object.assign(
+    {},
+    commonConfig.output,
+    ...[
+      {
+        file: "dist/light-graph.iife.js",
+        format: "iife",
+      },
+      {
+        file: "dist/mjs/light-graph.mjs",
+        format: "esm",
+      },
+      {
+        file: "dist/umd/light-graph.js",
+        format: "umd",
+      },
+    ]
+  );
+  serveConfig.plugins = [
+    // eslint({
+    //   exclude: ["node_modules/**", "json/**"],
+    //   throwOnError: true,
+    // }),
+    ...umdConfig.plugins,
+  ];
+  serveConfig.plugins.push(
+    serve({
+      open: true,
+      contentBase: ["dist"],
+      host: "localhost",
+      port: "3030",
+    }),
+    livereload({
+      watch: "dist",
+      verbose: false,
+    })
+  );
+  configurations.push(serveConfig);
 } else {
-    configurations.push(
-        esmConfig,
-        esmProdConfig,
-        umdConfig,
-        umdProdConfig
-    )
+  configurations.push(esmConfig, esmProdConfig, umdConfig, umdProdConfig);
 }
 
 export default configurations;

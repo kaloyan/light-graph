@@ -1,3 +1,6 @@
-import { render } from '../src';
+import LightGraph from "../src/index";
+// const LightGraph = require("../src/index.js");
 
-render();
+const g = new LightGraph();
+
+console.log(g);
